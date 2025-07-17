@@ -43,9 +43,9 @@ app.use(
       collectionName: 'sessions'
     }),
     cookie: {
-      secure: isProduction, // true in production (HTTPS)
-      sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site cookies in production
-      // maxAge: 24 * 60 * 60 * 1000, // 1 day (optional)
+      secure: true,           // MUST be true in production (HTTPS)
+      sameSite: 'none',       // MUST be 'none' for cross-site cookies
+      // maxAge: 24 * 60 * 60 * 1000, // optional: 1 day
     },
   })
 );
