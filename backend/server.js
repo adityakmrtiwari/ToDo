@@ -1,0 +1,72 @@
+//server.js
+
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+import passport from 'passport';
+import taskRoutes from './routes/taskRoute.js';
+import { router as authRouter, ensureAuth } from './auth.js';
+
+dotenv.config(); // Load environment variables
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Allow multiple origins for CORS
+const allowedOrigins = (process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [
+      'http://localhost:3000',
+      'http://10.5.17.78:3000',
+      'http://localhost:5000',
+      'http://10.5.17.78:5000',
+    ]
+);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      } else {
+        return callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'your_secret_key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }, // Set to true if using HTTPS
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+// MongoDB connection
+mongoose
+  .connect(process.env.MONGO_URI, {
+    // useNewUrlParser and useUnifiedTopology are not needed in Mongoose 6+
+  })
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
+
+// Auth routes
+app.use(authRouter);
+
+// Protect the /tasks route
+app.use('/tasks', ensureAuth, taskRoutes);
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
