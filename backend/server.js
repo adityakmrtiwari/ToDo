@@ -20,24 +20,14 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const allowedOrigins = isProduction
   ? ['https://to-do-omega-bay.vercel.app']
-  : (process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(',')
-      : [
-          'http://localhost:3000',
-          'http://localhost:5000',
-        ]
-    );
+  : [
+      'http://localhost:3000',
+      'http://localhost:5000',
+    ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        return callback(null, true);
-      } else {
-        return callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: allowedOrigins,
     credentials: true,
   })
 );
