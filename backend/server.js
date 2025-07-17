@@ -16,21 +16,21 @@ dotenv.config(); // Load environment variables
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Allow multiple origins for CORS
-const allowedOrigins = (process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : [
-      'http://localhost:3000',
-      'http://10.5.17.78:3000',
-      'http://localhost:5000',
-      'http://10.5.17.78:5000',
-    ]
-);
+const isProduction = process.env.NODE_ENV === 'production';
+
+const allowedOrigins = isProduction
+  ? ['https://to-do-omega-bay.vercel.app']
+  : (process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : [
+          'http://localhost:3000',
+          'http://localhost:5000',
+        ]
+    );
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) !== -1) {
         return callback(null, true);
@@ -52,7 +52,11 @@ app.use(
       mongoUrl: process.env.MONGO_URI,
       collectionName: 'sessions'
     }),
-    cookie: { secure: false }, // Set to true if using HTTPS
+    cookie: {
+      secure: isProduction, // true in production (HTTPS)
+      sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site cookies in production
+      // maxAge: 24 * 60 * 60 * 1000, // 1 day (optional)
+    },
   })
 );
 app.use(passport.initialize());
