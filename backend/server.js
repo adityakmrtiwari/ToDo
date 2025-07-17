@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import taskRoutes from './routes/taskRoute.js';
 import { router as authRouter, ensureAuth } from './auth.js';
+import MongoStore from 'connect-mongo';
 
 dotenv.config(); // Load environment variables
 
@@ -47,6 +48,10 @@ app.use(
     secret: process.env.SESSION_SECRET || 'your_secret_key',
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      collectionName: 'sessions'
+    }),
     cookie: { secure: false }, // Set to true if using HTTPS
   })
 );
