@@ -44,7 +44,8 @@ router.get(
   }),
   (req, res) => {
     // Redirect to frontend after successful login
-    res.redirect('http://localhost:3000');
+    const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(redirectUrl);
   }
 );
 
@@ -56,7 +57,8 @@ router.use((err, req, res, next) => {
 
 router.get('/logout', (req, res) => {
   req.logout(() => {
-    res.redirect('http://localhost:3000');
+    const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(redirectUrl);
   });
 });
 
