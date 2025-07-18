@@ -15,6 +15,14 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
+// Validate required Google OAuth env variables
+['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_CALLBACK_URL'].forEach((key) => {
+  if (!process.env[key]) {
+    console.error(`❌ Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
+});
+
 // Passport Google OAuth Strategy
 passport.use(
   new GoogleStrategy(
@@ -25,6 +33,7 @@ passport.use(
     },
     (accessToken, refreshToken, profile, done) => {
       // Here you can save/find user in DB if needed
+      console.log('Google OAuth profile:', profile);
       return done(null, profile);
     }
   )
@@ -33,11 +42,19 @@ passport.use(
 // Auth routes
 router.get(
   '/auth/google',
+  (req, res, next) => {
+    console.log('Starting Google OAuth login');
+    next();
+  },
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 router.get(
   '/auth/google/callback',
+  (req, res, next) => {
+    console.log('Google OAuth callback received');
+    next();
+  },
   passport.authenticate('google', {
     failureRedirect: '/',
     session: true,
@@ -45,6 +62,7 @@ router.get(
   (req, res) => {
     // Redirect to frontend after successful login
     const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    console.log('Login successful, redirecting to frontend:', redirectUrl);
     res.redirect(redirectUrl);
   }
 );
@@ -56,8 +74,13 @@ router.use((err, req, res, next) => {
 });
 
 router.get('/logout', (req, res) => {
-  req.logout(() => {
+  req.logout((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).send('Logout error');
+    }
     const redirectUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    console.log('User logged out, redirecting to frontend:', redirectUrl);
     res.redirect(redirectUrl);
   });
 });
@@ -76,6 +99,7 @@ function ensureAuth(req, res, next) {
   if (req.isAuthenticated()) {
     return next();
   }
+  console.warn('Unauthorized access attempt');
   res.status(401).json({ message: 'Unauthorized' });
 }
 
