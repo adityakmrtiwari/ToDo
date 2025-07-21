@@ -3,31 +3,21 @@ import config from '../config';
 const BACKEND_URL = config.BACKEND_URL;
 
 export function loginWithGoogle() {
-  try {
-    window.location.href = `${BACKEND_URL}/auth/google`;
-  } catch (err) {
-    alert('Login failed: ' + err.message);
-    console.error('Login error:', err);
-  }
+  window.location.href = `${BACKEND_URL}/auth/google`;
 }
 
-export async function logout() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/logout`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    if (!res.ok) throw new Error('Logout failed');
-  } catch (err) {
-    alert('Logout failed: ' + err.message);
-    console.error('Logout error:', err);
-  }
+export function logout() {
+  localStorage.removeItem('jwt_token');
 }
 
 export async function getUser() {
+  const token = localStorage.getItem('jwt_token');
+  if (!token) return null;
   try {
     const res = await fetch(`${BACKEND_URL}/auth/user`, {
-      credentials: 'include',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     });
     if (res.ok) {
       return res.json();
