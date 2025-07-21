@@ -19,8 +19,6 @@ passport.use(
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
     (accessToken, refreshToken, profile, done) => {
-      // Here you can save/find user in DB if needed
-      console.log('Google OAuth profile:', profile);
       return done(null, profile);
     }
   )

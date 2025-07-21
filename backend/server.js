@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import passport from 'passport';
 import taskRoutes from './routes/taskRoute.js';
 import { router as authRouter } from './auth.js';
+import { jwtAuthMiddleware } from './auth.js';
 import './config/passport.js';
 
 dotenv.config(); // Load environment variables
@@ -60,7 +61,7 @@ mongoose
 app.use(authRouter);
 
 // Protect the /tasks route with JWT middleware
-app.use('/tasks', passport.authenticate('jwt', { session: false }), taskRoutes);
+app.use('/tasks', jwtAuthMiddleware, taskRoutes);
 
 // Global error handler for uncaught errors
 app.use((err, req, res, next) => {
