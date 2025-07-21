@@ -4,23 +4,21 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import session from 'express-session';
-import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import taskRoutes from './routes/taskRoute.js';
-import { router as authRouter, ensureAuth } from './auth.js';
-import MongoStore from 'connect-mongo';
+import { router as authRouter } from './auth.js';
+import './config/passport.js';
 
 dotenv.config(); // Load environment variables
 
 // Validate required environment variables
 const requiredEnv = [
   'MONGO_URI',
-  'SESSION_SECRET',
   'GOOGLE_CLIENT_ID',
   'GOOGLE_CLIENT_SECRET',
   'GOOGLE_CALLBACK_URL',
   'FRONTEND_URL',
+  'JWT_SECRET',
 ];
 requiredEnv.forEach((key) => {
   if (!process.env[key]) {
@@ -48,25 +46,6 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(cookieParser());
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI,
-      collectionName: 'sessions',
-    }),
-    cookie: {
-      secure: isProduction, // true in production, false in dev
-      sameSite: isProduction ? 'none' : 'lax', // 'none' for prod, 'lax' for dev
-      // maxAge: 24 * 60 * 60 * 1000,
-    },
-  })
-);
-app.use(passport.initialize());
-app.use(passport.session());
 
 // MongoDB connection
 mongoose
@@ -80,8 +59,8 @@ mongoose
 // Auth routes
 app.use(authRouter);
 
-// Protect the /tasks route
-app.use('/tasks', ensureAuth, taskRoutes);
+// Protect the /tasks route with JWT middleware
+app.use('/tasks', passport.authenticate('jwt', { session: false }), taskRoutes);
 
 // Global error handler for uncaught errors
 app.use((err, req, res, next) => {

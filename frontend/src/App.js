@@ -156,6 +156,12 @@ const App = () => {
     useEffect(() => {
         const checkAuth = async () => {
             setLoading(true);
+            const token = localStorage.getItem('jwt_token');
+            if (!token) {
+                setUser(null);
+                setLoading(false);
+                return;
+            }
             const res = await getUser();
             setUser(res && res.user);
             setLoading(false);
@@ -165,6 +171,14 @@ const App = () => {
         document.body.classList.toggle("dark-mode", darkMode);
         // eslint-disable-next-line
     }, [darkMode]);
+
+    // Logout handler
+    const handleLogout = () => {
+        logout();
+        setUser(null);
+        setTasks([]);
+        window.location.href = '/';
+    };
 
     if (loading) return <div className="loader">Loading...</div>;
 
@@ -180,7 +194,7 @@ const App = () => {
                     {user ? (
                         <>
                             <span className="user-name">{user.displayName || user.emails?.[0]?.value}</span>
-                            <button onClick={() => { logout(); window.location.href = '/'; }} className="logout-btn">Logout</button>
+                            <button onClick={handleLogout} className="logout-btn">Logout</button>
                         </>
                     ) : (
                         <button onClick={loginWithGoogle} className="login-btn">Login with Google</button>
