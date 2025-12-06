@@ -7,6 +7,11 @@ const taskSchema = new mongoose.Schema({
   description: String,
   dueDate: Date,
   completed: Boolean,
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
+  },
   userId: String, // User's Google profile id
 });
 
