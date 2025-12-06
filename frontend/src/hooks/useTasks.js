@@ -6,7 +6,7 @@ export default function useTasks(user) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [editFields, setEditFields] = useState({ title: '', description: '', dueDate: '' });
+  const [editFields, setEditFields] = useState({ title: '', description: '', dueDate: '', priority: 'medium' });
 
   const fetchTasks = useCallback(async () => {
     if (!user) return;
@@ -36,17 +36,21 @@ export default function useTasks(user) {
     fetchTasks();
   };
 
-  const editTask = async () => { // REFINED: Logic is now fully contained here
-    await fetchWithAuth(`/tasks/${editingId}`, {
+  const editTask = async (id, data) => { // REFINED: Accept id and data arguments to match TaskInput's call
+    const taskId = id || editingId;
+    const taskData = data || {
+      title: editFields.title,
+      description: editFields.description,
+      dueDate: editFields.dueDate ? new Date(editFields.dueDate) : null,
+      priority: editFields.priority
+    };
+
+    await fetchWithAuth(`/tasks/${taskId}`, {
       method: 'PUT',
-      body: JSON.stringify({
-        title: editFields.title,
-        description: editFields.description,
-        dueDate: editFields.dueDate ? new Date(editFields.dueDate) : null,
-      }),
+      body: JSON.stringify(taskData),
     });
     setEditingId(null);
-    setEditFields({ title: '', description: '', dueDate: '' });
+    setEditFields({ title: '', description: '', dueDate: '', priority: 'medium' });
     fetchTasks();
   };
 
@@ -54,7 +58,7 @@ export default function useTasks(user) {
     await fetchWithAuth(`/tasks/${taskId}`, { method: 'DELETE' });
     fetchTasks();
   };
-  
+
   const toggleTaskComplete = async (task) => { // REFINED: Centralized toggle logic
     await fetchWithAuth(`/tasks/${task._id}`, {
       method: 'PUT',
@@ -75,8 +79,8 @@ export default function useTasks(user) {
     setEditFields({
       title: task.title,
       description: task.description || '',
-      // REFINED: Handle date formatting correctly for the input
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : '',
+      priority: task.priority || 'medium',
     });
   };
 

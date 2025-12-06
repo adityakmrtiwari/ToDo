@@ -11,12 +11,13 @@ export const getAllTasks = async (req, res) => {
 
 export const createTask = async (req, res) => {
   try {
-    const { title, completed, description, dueDate } = req.body;
+    const { title, completed, description, dueDate, priority } = req.body;
     const task = new Task({
       title,
       completed,
       description,
       dueDate,
+      priority,
       userId: req.user.id
     });
     await task.save();
@@ -28,10 +29,10 @@ export const createTask = async (req, res) => {
 
 export const updateTask = async (req, res) => {
   try {
-    const { title, completed, description, dueDate } = req.body;
+    const { title, completed, description, dueDate, priority } = req.body;
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
-      { title, completed, description, dueDate },
+      { title, completed, description, dueDate, priority },
       { new: true }
     );
     if (!task) return res.status(404).json({ error: 'Task not found' });
