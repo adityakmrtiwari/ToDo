@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  googleId: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  username: { type: String, unique: true, sparse: true },
+  password: { type: String }, // For custom auth
+  googleId: { type: String, unique: true, sparse: true }, // For Google auth
   displayName: String,
-  emails: [{ value: String }],
   photos: [{ value: String }],
 });
 
