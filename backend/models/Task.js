@@ -3,16 +3,29 @@
 import mongoose from 'mongoose';
 
 const taskSchema = new mongoose.Schema({
-  title: String,
+  title: {
+    type: String,
+    required: true,
+  },
   description: String,
-  dueDate: Date,
-  completed: Boolean,
+  dueDate: {
+    type: Date,
+    default: Date.now,
+  },
+  completed: {
+    type: Boolean,
+    default: false,
+  },
   priority: {
     type: String,
     enum: ['low', 'medium', 'high'],
     default: 'medium'
   },
-  userId: String, // User's Google profile id
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
 });
 
 const Task = mongoose.model('Task', taskSchema);

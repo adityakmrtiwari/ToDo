@@ -2,7 +2,24 @@ import Task from '../models/Task.js';
 
 export const getAllTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ userId: req.user.id });
+    const { search, date } = req.query;
+    let query = { userId: req.user.id };
+
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+
+    if (date === 'today') {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+
+      query.dueDate = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    const tasks = await Task.find(query);
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -56,6 +73,33 @@ export const deleteAllTasks = async (req, res) => {
   try {
     await Task.deleteMany({ userId: req.user.id });
     res.json({ message: 'All your tasks deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const query = {
+      userId: req.user.id,
+      dueDate: { $gte: startOfDay, $lte: endOfDay }
+    };
+
+    const todayTasks = await Task.find(query);
+    const totalCount = todayTasks.length;
+    const completedCount = todayTasks.filter(task => task.completed).length;
+
+    res.json({
+      totalTasks: totalCount,
+      completedTasks: completedCount,
+      tasks: todayTasks
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
